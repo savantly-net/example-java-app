@@ -35,6 +35,9 @@ jobs:
       - run:
           name: Install Npm
           command: curl -L https://npmjs.org/install.sh | sudo sh
+      - run:
+          name: Upgrade Yo
+          command: npm install -g yo@latest
 
       - checkout
 
