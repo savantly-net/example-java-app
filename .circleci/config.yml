@@ -3,8 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
 version: 2
-orbs:
-  node: circleci/node@1.1.6
+
 jobs:
   build:
     docker:
@@ -24,6 +23,17 @@ jobs:
       TERM: dumb
 
     steps:
+      # Install Node for Front-end Build
+      - run:
+          name: Download Node
+          command: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash
+      - run:
+          name: Install Node
+          command: sudo apt-get install -y nodejs
+      - run:
+          name: update-npm
+          command: sudo npm install -g npm@latest
+
       - checkout
 
       # Download and cache dependencies
@@ -40,13 +50,24 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
-      - run: ./gradlew clean --no-daemon
-      - run: ./gradlew npm_install -PnodeInstall --no-daemon
-      - run: ./gradlew test integrationTest -PnodeInstall --no-daemon
-      - run: ./gradlew npm_run_test -PnodeInstall --no-daemon
-      - run: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
-      - run: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
-      - run: ./gradlew jib
+      - run: 
+          name: clean
+          command: ./gradlew clean --no-daemon
+      - run: 
+          name: npm install
+          command: ./gradlew npm_install -PnodeInstall --no-daemon
+      - run: 
+          name: integration tests
+          command: ./gradlew test integrationTest -PnodeInstall --no-daemon
+      - run: 
+          name: front-end tests
+          command: ./gradlew npm_run_test -PnodeInstall --no-daemon
+      - run: 
+          name: package
+          command: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
+      - run:
+          name: build docker image
+          command:  ./gradlew jib
 
       # run tests!
       #- run: ./gradlew test
