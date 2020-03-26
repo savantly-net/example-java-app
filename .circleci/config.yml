@@ -26,8 +26,6 @@ jobs:
       TERM: dumb
       #DEBUG: babel
       GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4096m" -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.daemon=false'
-      AWS_RESOURCE_NAME_PREFIX: savantly
-      AWS_DEFAULT_REGION:  us-east-1
 
     steps:
       - setup_remote_docker:
@@ -87,15 +85,13 @@ jobs:
       - run: 
           name: npm install
           command: ./gradlew npm_install --no-daemon
-      #- run: 
-      #    name: integration tests
-      #    command: ./gradlew test integrationTest -PnodeInstall --no-daemon
       - run: 
           name: front-end tests
           command: ./gradlew npm_run_test --no-daemon
-      - run:
-          name: Sonarqube
-          command: ./gradlew -Pprod check jacocoTestReport sonarqube --stacktrace --info
+      # disabling to save some time
+      #- run:
+      #    name: Sonarqube
+      #    command: ./gradlew -Pprod check jacocoTestReport sonarqube --stacktrace --info
       - run: 
           name: package
           command: ./gradlew bootJar -x test -Pprod --no-daemon
@@ -113,6 +109,33 @@ jobs:
           paths:
             - docker-image
 
+  deploy:  
+    docker:
+      - image: circleci/python:3.6.1
+    environment:
+      AWS_DEFAULT_OUTPUT: json
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: workspace
+      - aws-cli/install
+      - aws-cli/configure:
+          aws-access-key-id: "$AWS_ACCESS_KEY_ID"
+          aws-region: "$AWS_DEFAULT_REGION"
+      - run:
+          name: Load image
+          command: |
+            docker load --input workspace/docker-image/image.tar
+      - run:
+          name: Setup common environment variables
+          command: |
+            echo 'export FULL_IMAGE_NAME="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_RESOURCE_NAME_PREFIX}:${CIRCLE_SHA1}"' >> $BASH_ENV
+      - run:
+          name: Push image
+          command: |
+            eval $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+            docker push $FULL_IMAGE_NAME
 
 workflows:
   version: 2
@@ -120,4 +143,8 @@ workflows:
   dev-pipeline:
     jobs:
     - build:
-        context: SonarCloud
+        context: savantly-aws
+    - deploy:
+        context: savantly-aws
+        requires:
+        - build
