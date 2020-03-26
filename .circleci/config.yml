@@ -19,7 +19,7 @@ jobs:
 
     environment:
       # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
+      JVM_OPTS: -Xmx4096m
       TERM: dumb
       GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4096m" -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.daemon=false'
 
@@ -77,13 +77,13 @@ jobs:
           command: ./gradlew npm_run_test -PnodeInstall --no-daemon
       - run:
           name: Sonarqube
-          command: ./gradlew sonarqube --stacktrace
+          command: ./gradlew sonarqube --no-daemon --stacktrace --info
       - run: 
           name: package
           command: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
       - run:
           name: build docker image
-          command:  ./gradlew jib --no-daemon --stacktrace
+          command:  ./gradlew jib --no-daemon --stacktrace  --info
 
       # run tests!
       #- run: ./gradlew test
