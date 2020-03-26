@@ -5,12 +5,8 @@
 version: 2
 orbs:
   node: circleci/node@1.1.6
-
-build_steps: &build_steps
-  
-
 jobs:
-  dependencies_setup:
+  build:
     docker:
       # specify the version you desire here
       - image: circleci/openjdk:8-jdk
@@ -19,47 +15,48 @@ jobs:
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/postgres:9.4
+
     working_directory: ~/repo
+
     environment:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
       TERM: dumb
-    executor:
-      name: node/default
-      tag: '10.4'
+
     steps:
-      - node/with-cache
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: gradle dependencies
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+
+      - run: ./gradlew clean --no-daemon
+      - run: ./gradlew npm_install -PnodeInstall --no-daemon
+      - run: ./gradlew test integrationTest -PnodeInstall --no-daemon
+      - run: ./gradlew npm_run_test -PnodeInstall --no-daemon
+      - run: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
+      - run: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
+      - run: ./gradlew jib
+
+      # run tests!
+      #- run: ./gradlew test
       
-  build_app:
-    steps:
-    - checkout
-
-    # Download and cache dependencies
-    - restore_cache:
-        keys:
-          - v1-dependencies-{{ checksum "build.gradle" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-    - run: gradle dependencies
-
-    - save_cache:
-        paths:
-          - ~/.gradle
-        key: v1-dependencies-{{ checksum "build.gradle" }}
-
-    # run tests!
-    - run: gradle test
-  
-    # build docker image
-    - run: gradle bootJar -Pprod jibDockerBuild
-
-    
+      # build docker image
+      #- run: ./gradlew bootJar -Pprod jibDockerBuild
 
 workflows:
   version: 2
 
   dev-pipeline:
     jobs:
-    - dependencies_setup
-    - build_app
+    - build
