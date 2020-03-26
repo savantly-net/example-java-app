@@ -1,6 +1,0 @@
-{
-  "headers": {
-    "origin": "http://localhost:3000"
-  },
-  "body": "{\"honeypot\": \"has data\"}"
-}
