@@ -77,7 +77,7 @@ jobs:
           command: ./gradlew npm_run_test --no-daemon
       - run:
           name: Sonarqube
-          command: ./gradlew sonarqube --no-daemon --stacktrace --info
+          command: ./gradlew -Pprod check jacocoTestReport sonarqube --stacktrace --info
       - run: 
           name: package
           command: ./gradlew bootJar -x test -Pprod --no-daemon
