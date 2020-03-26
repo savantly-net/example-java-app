@@ -67,7 +67,7 @@ jobs:
           command: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
       - run:
           name: build docker image
-          command:  ./gradlew jib
+          command:  ./gradlew jib  --no-daemon
 
       # run tests!
       #- run: ./gradlew test
