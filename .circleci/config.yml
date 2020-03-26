@@ -43,12 +43,24 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package-lock.json checksum
+            # when this file is changed, this key will fail
+            - v1-npm-deps-{{ checksum "package-lock.json" }}
+            # Find the most recently generated cache used from any branch
+            - v1-npm-deps-
+
       - run: gradle dependencies
 
       - save_cache:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
+      - save_cache:
+          paths:
+            - ~/.npm
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
 
       - run: 
           name: clean
@@ -62,6 +74,9 @@ jobs:
       - run: 
           name: front-end tests
           command: ./gradlew npm_run_test -PnodeInstall --no-daemon
+      - run:
+          name: Sonarqube
+          command: ./gradlew sonarqube
       - run: 
           name: package
           command: ./gradlew bootJar -x test -Pprod -PnodeInstall --no-daemon
