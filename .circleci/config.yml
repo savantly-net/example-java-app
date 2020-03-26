@@ -6,23 +6,32 @@ version: 2
 orbs:
   node: circleci/node@1.1.6
 
-dependencies_setup: &dependencies_setup
-  docker:
-    # specify the version you desire here
-    - image: circleci/openjdk:8-jdk
-
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    # - image: circleci/postgres:9.4
-  working_directory: ~/repo
-  environment:
-    # Customize the JVM maximum heap limit
-    JVM_OPTS: -Xmx3200m
-    TERM: dumb
-
 build_steps: &build_steps
-  steps:
+  
+
+jobs:
+  dependencies_setup:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:8-jdk
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+    working_directory: ~/repo
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+    executor:
+      name: node/default
+      tag: '10.4'
+    steps:
+      - node/with-cache
+      
+  build_app:
+    steps:
     - checkout
 
     # Download and cache dependencies
@@ -31,8 +40,6 @@ build_steps: &build_steps
           - v1-dependencies-{{ checksum "build.gradle" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-    
-    - node/with-cache:
 
     - run: gradle dependencies
 
@@ -47,11 +54,6 @@ build_steps: &build_steps
     # build docker image
     - run: gradle bootJar -Pprod jibDockerBuild
 
-jobs:
-  build_app:
-    <<: *dependencies_setup
-    <<: *build_steps
-
     
 
 workflows:
@@ -59,4 +61,5 @@ workflows:
 
   dev-pipeline:
     jobs:
+    - dependencies_setup
     - build_app
