@@ -32,8 +32,8 @@ jobs:
           name: Install Node
           command: sudo apt-get install -y nodejs
       - run:
-          name: update-npm
-          command: sudo npm install -g npm@latest
+          name: Install Npm
+          command: curl -L https://npmjs.org/install.sh | sudo sh
 
       - checkout
 
