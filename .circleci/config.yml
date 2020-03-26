@@ -36,6 +36,9 @@ jobs:
           name: Install Npm
           command: curl -L https://npmjs.org/install.sh | sudo sh
       - run:
+          name: Update Permissions for node_module
+          command: sudo chown -R circleci:circleci /usr/lib/node_modules
+      - run:
           name: Upgrade Yo
           command: npm install -g yo@latest
 
