@@ -1,0 +1,7 @@
+{
+  "headers": {
+    "origin": "http://localhost:3000"
+  },
+  "body":
+    "{\"ses_address\": \"jeremy@savantly.net\",\"subject\": \"Receiver Test subject\",\"name\": \"Sender Name\",\"reply_to\": \"jeremy@savantly.net\",\"message\": \"Sender message\"}"
+}
