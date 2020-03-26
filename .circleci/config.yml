@@ -80,4 +80,5 @@ workflows:
 
   dev-pipeline:
     jobs:
-    - build
+    - build:
+        context: SonarCloud
