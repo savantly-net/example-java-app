@@ -6,7 +6,7 @@ version: 2
 orbs:
   node: circleci/node@1.1.6
 
-dependency_steps: &dependency_steps
+dependencies_setup: &dependencies_setup
   docker:
     # specify the version you desire here
     - image: circleci/openjdk:8-jdk
@@ -20,8 +20,6 @@ dependency_steps: &dependency_steps
     # Customize the JVM maximum heap limit
     JVM_OPTS: -Xmx3200m
     TERM: dumb
-  steps:
-    - checkout
 
 build_steps: &build_steps
   steps:
@@ -49,7 +47,7 @@ build_steps: &build_steps
 
 jobs:
   build_app:
-    <<: *dependency_steps
+    <<: *dependencies_setup
     <<: *build_steps
 
     
