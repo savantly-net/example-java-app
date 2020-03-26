@@ -23,16 +23,6 @@ jobs:
       TERM: dumb
 
     steps:
-      # Install Node for Front-end Build
-      - run:
-          name: Download Node
-          command: curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash
-      - run:
-          name: Install Node
-          command: sudo apt-get install -y nodejs
-      - run:
-          name: update-npm
-          command: sudo npm install -g npm@latest
 
       - checkout
 
@@ -56,9 +46,9 @@ jobs:
       - run: 
           name: npm install
           command: ./gradlew npm_install -PnodeInstall --no-daemon
-      - run: 
-          name: integration tests
-          command: ./gradlew test integrationTest -PnodeInstall --no-daemon
+      #- run: 
+      #    name: integration tests
+      #    command: ./gradlew test integrationTest -PnodeInstall --no-daemon
       - run: 
           name: front-end tests
           command: ./gradlew npm_run_test -PnodeInstall --no-daemon
