@@ -87,10 +87,9 @@ jobs:
       - run: 
           name: front-end tests
           command: ./gradlew npm_run_test --no-daemon
-      # disabling to save some time
-      #- run:
-      #    name: Sonarqube
-      #    command: ./gradlew -Pprod check jacocoTestReport sonarqube --stacktrace --info
+      - run:
+          name: Sonarqube
+          command: ./gradlew -Pprod check jacocoTestReport sonarqube --stacktrace --info
       - run: 
           name: package
           command: ./gradlew bootJar -x test -Pprod --no-daemon
