@@ -4,6 +4,9 @@
 #
 version: 2
 
+orbs:
+  aws-cli: circleci/aws-cli@0.1.4
+
 jobs:
   build:
     docker:
@@ -23,8 +26,19 @@ jobs:
       TERM: dumb
       #DEBUG: babel
       GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4096m" -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.daemon=false'
+      AWS_RESOURCE_NAME_PREFIX: savantly
+      AWS_DEFAULT_REGION:  us-east-1
 
     steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run:
+          name: Setup common environment variables
+          command: |
+            echo 'export ECR_REPOSITORY_NAME="${AWS_RESOURCE_NAME_PREFIX}"' >> $BASH_ENV
+            echo 'export FULL_IMAGE_NAME="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${CIRCLE_SHA1}"' >> $BASH_ENV
+      
       # Install Node for Front-end Build
       - run:
           name: Download Node
@@ -86,14 +100,19 @@ jobs:
           name: package
           command: ./gradlew bootJar -x test -Pprod --no-daemon
       - run:
-          name: build docker image
-          command:  ./gradlew jib -x test -Pprod --no-daemon --stacktrace  --info
+          name: Build Docker image
+          command: |
+            docker build -t $FULL_IMAGE_NAME .
+      - run:
+          name: Save Docker image to an archive
+          command: |
+            mkdir docker-image
+            docker save -o docker-image/image.tar $FULL_IMAGE_NAME
+      - persist_to_workspace:
+          root: .
+          paths:
+            - docker-image
 
-      # run tests!
-      #- run: ./gradlew test
-      
-      # build docker image
-      #- run: ./gradlew bootJar -Pprod jibDockerBuild
 
 workflows:
   version: 2
